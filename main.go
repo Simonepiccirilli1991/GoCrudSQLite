@@ -1,9 +1,12 @@
 package main
 
 import (
+	"NotifyGoBot/controller"
 	"NotifyGoBot/model"
+	"NotifyGoBot/service"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -17,12 +20,23 @@ func newRouter() *mux.Router {
 	r.HandleFunc("/hello", handler).Methods("GET")
 	r.HandleFunc("/", handlerMainPage)
 	r.HandleFunc("/test", customResp)
+	// gestite da handler aka controller
+	r.HandleFunc("/notify", controller.CreateNotifyHandler).Methods("POST")
+	r.HandleFunc("/notify", controller.GetNotifiesHandler).Methods("GET")
+	r.HandleFunc("/notify", controller.UpdateNotifyHandler).Methods("PUT")
+
 	return r
 }
 
 func main() {
 	// The router is now formed by calling the `newRouter` constructor function
 	// that we defined above. The rest of the code stays the same
+	err := service.InitDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer service.CloseDB()
+
 	r := newRouter()
 	http.ListenAndServe(":8080", r)
 }
@@ -37,7 +51,7 @@ func handlerMainPage(w http.ResponseWriter, r *http.Request) {
 
 func customResp(w http.ResponseWriter, r *http.Request) {
 
-	m := model.Notify{From: "Ajeje", Id: 1, Testo: "ciao bello"}
+	m := model.Notify{From: "Ajeje", ID: 1, Testo: "ciao bello"}
 	// non posso tornare oggeto diretto devo prima convertirlo in json
 	resp, err := json.Marshal(m)
 	if err != nil {
